@@ -51,12 +51,14 @@ const Main = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setIsAdmin(user.admin);// FIXME: admin?
+    console.log(user);
+    console.log(user[0]);
+    if (user[0]) {
+      setIsAdmin(user[0].admin);
     }
   }, []);
 
-  if (!user.TOKENMAGICO) { // FIXME: token
+  if (!user[0]) {
     return (
       <div
         style={{
@@ -94,7 +96,7 @@ const Main = () => {
   return (
     <Container>
         <Title text="Usuario" /> 
-        <h3 style={{ marginBottom: 30 }}>{user}</h3>
+        <h3 style={{ marginBottom: 30 }}>{}</h3>
         <Button
           variant="contained"
           size="large"
@@ -130,7 +132,20 @@ const Main = () => {
         >
           Editar usuario
         </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          color="primary"
+          style={{ width: 300, marginBottom: 20 }}
+          onClick={() => {
+            history.push("/editPass");
+          }}
+        >
+          Editar contraseña
+        </Button>
         {isAdmin && (
+          
         <Button
           type="submit"
           variant="contained"
@@ -152,6 +167,7 @@ const Main = () => {
           color="primary"
           onClick={() => {
             localStorage.clear();
+            history.push("/signin");
           }}
         >
           Salir

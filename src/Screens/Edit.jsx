@@ -6,7 +6,7 @@ import {
 } from "@material-ui/core";
 import { TextInput, Title } from "../Components";
 
-import { updateUser } from "../Utils/api";
+import { updateUser, getUser } from "../Utils/api";
 
 import Container from "./Styles/Container";
 
@@ -35,15 +35,11 @@ const useStyles = makeStyles((theme) => ({
 const Edit = () => {
   const classes = useStyles();
   const history = useHistory();
-
   const user = useState(JSON.parse(localStorage.getItem('user')));
 
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [passwordError, setPassowrdError] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -60,42 +56,40 @@ const Edit = () => {
       case "email":
         setEmail(value);
         break;
-      case "password":
-        setPassword(value);
-        setPassowrdError(value.length < 5);
-        break;
       default:
         break;
     }
   };
 
   useEffect(() => {
-    const { data } = updateUser(user.username);
-    setNombre(data.nombre);
-    setApellido(data.apellido);
-    setEmail(data.email);
+    getUser().then(response => {
+      if (response.data.error) {
+        console.log(response.data.message);
+      } else {
+        console.log(response.data);
+        setNombre(response.data.nombre);
+        setApellido(response.data.apellido);
+        setEmail(response.data.mail);
+      }
+    });
   }, []);
 
   const actualizar = () => {
     setErrorMessage("");
-    const { data } = updateUser({
-      nombre: nombre,
-      apellido: apellido,
-      email: email,
-      password: password, // FIXME: mejorar edicion de contraseña
+    updateUser(nombre, apellido, email).then(value => {
+      if (value.error) {
+        alert(value.message);
+      } else {
+        alert("Datos cambiados con éxito!");
+      }
     });
-    // FIXME: validar otros errores
-    if (data.message === "Persona ya registrada.") {
-      setErrorMessage("Error en registro");
-    } else {
-      history.push("/signin");
-    }
   };
 
+  console.log(apellido);
 
   return (
     <Container >
-      <Title text=" Crear Cuenta" white />
+      <Title text="Editar usuario" white />
 
       <form className={classes.form} noValidate>
         <TextInput
@@ -120,27 +114,15 @@ const Edit = () => {
           name={"email"}
           type={"email"}
         />
-        <TextInput
-          id={"password"}
-          onChange={handleInput}
-          label={"Contraseña"}
-          name={"password"}
-          error={passwordError}
-          errorMessage={"Ingrese un contraseña mas larga"} // FIXME: otros errores?
-          type={"password"}
-        />
 
         {errorMessage && <div style={{ color: "red" }}> {errorMessage} </div>}
 
         <Button
-          type="submit"
           fullWidth
           disabled={
             !nombre ||
             !apellido ||
             !email ||
-            !password ||
-            passwordError ||
             errorMessage
           }
           variant="contained"

@@ -74,19 +74,14 @@ const SignUp = () => {
 
   const registrarse = () => {
     setErrorMessage("");
-    const { data } = register({
-      nombre: nombre,
-      apellido: apellido,
-      username: username,
-      email: email,
-      password: password,
+    register(username, password, nombre, apellido, email).then(value => {
+      if (value.error) {
+        console.log(value.message);
+      } else {
+        history.push("/signin");
+      }
     });
     // FIXME: validar otros errores
-    if (data.message === "Persona ya registrada.") {
-      setErrorMessage("Error en registro");
-    } else {
-      history.push("/signin");
-    }
   };
 
 
@@ -121,7 +116,7 @@ const SignUp = () => {
           onChange={handleInput}
           label={"Email"}
           name={"email"}
-          type={"email"} // FIXME: puede estar mal
+          type={"email"}
         />
         <TextInput
           id={"password"}
@@ -136,7 +131,6 @@ const SignUp = () => {
         {errorMessage && <div style={{ color: "red" }}> {errorMessage} </div>}
 
         <Button
-          type="submit"
           fullWidth
           disabled={
             !username ||

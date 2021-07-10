@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
   Button,
+  Link,
+  Checkbox,
 } from "@material-ui/core";
 import { DataGrid } from '@material-ui/data-grid';
 import "moment/locale/es";
 import { useHistory } from "react-router-dom";
 import { Title } from "../Components";
+
+import { makeAdmin } from "../Utils/api";
 
 import { getUsers } from "../Utils/api";
 import Container from "./Styles/Container";
@@ -16,17 +20,70 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 150 },
+    { field: 'username', headerName: 'Nombre de usuario', width: 150 },
+    { field: 'nombre', headerName: 'Nombre', width: 150 },
+    { field: 'apellido', headerName: 'Apellido', width: 150 },
+    { field: 'mail', headerName: 'Email', width: 300 },
+    {
+      field: 'admin',
+      headerName: 'Admin',
+      renderCell: (params) => (
+          <Checkbox
+            checked={params.row.admin}
+            onChange={() => changeAdmin(params.row.username)}
+            inputProps={{ 'aria-label': 'primary checkbox' }}
+          />
+      ),
+    },
+  ];
+
+  const DataTable = (users) => {
+    return (
+      <div style={{ height: 400, width: '100%' }}>
+        <DataGrid rows={users} columns={columns} pageSize={5}/>
+      </div>
+    );
+  }
+
+  const changeAdmin = (username) => {
+    setUsers(users.map(u => {
+      if(u.username === username && username !== user[0].sub){
+        u.admin = !u.admin;
+      }
+      return u
+    }))
+    if(username !== user[0].sub){
+      makeAdmin(username).then(value => {
+        if (value.error) {
+          alert(value.message);
+        } else {
+          alert("Permisos de admin cambiados");
+        }
+      });
+    }else {
+      alert("No puedes quitarte admin");
+    }
+  }
+
   useEffect(() => {
     if (user) {
-      setIsAdmin(user.admin);// FIXME: admin?
+      setIsAdmin(user[0].admin);// FIXME: admin?
     }
   }, []);
 
   useEffect(() => {
-    setUsers(getUsers());
+    getUsers().then(response => {
+      if (response.data.error) {
+        alert(response.data.message)
+      } else {
+        setUsers(response.data);
+      }
+    });
   }, []);
 
-  if (!user.TOKENMAGICO || !isAdmin) { // FIXME: token
+  if (!user[0] || !isAdmin) { // FIXME: token
     return (
       <div
         style={{
@@ -54,51 +111,18 @@ const Admin = () => {
   return (
     <Container>
         <Title text="Admin" /> 
-        {DataTable(users)}
-        <Button
-          type="submit"
-          variant="contained"
-          size="medium"
-          color="primary"
+        {users && DataTable(users)}
+        <Link
+          href="/"
+          variant="body2"
           onClick={() => {
-            localStorage.clear();
+            history.push("/");
           }}
         >
-          Salir
-        </Button>
+          {"Volver"}
+        </Link>
     </Container>
   );
 };
 
 export default Admin;
-
-
-const columns = [
-  { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'firstName', headerName: 'First name', width: 130 },
-  { field: 'lastName', headerName: 'Last name', width: 130 },
-  {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 90,
-  },
-  {
-    field: 'fullName',
-    headerName: 'Full name',
-    description: 'This column has a value getter and is not sortable.',
-    sortable: false,
-    width: 160,
-    valueGetter: (params) =>
-      `${params.getValue('firstName') || ''} ${params.getValue('lastName') || ''}`,
-  },
-];
-
-
-const DataTable = (rows) => {
-  return (
-    <div style={{ height: 400, width: '100%' }}>
-      <DataGrid rows={rows} columns={columns} pageSize={1000} checkboxSelection />
-    </div>
-  );
-}

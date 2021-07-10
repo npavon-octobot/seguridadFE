@@ -12,6 +12,7 @@ const TextInput = (props) => {
     error = false,
     errorMessage,
     type = "text",
+    defaultValue,
   } = props;
 
   const theme = createMuiTheme({
@@ -36,6 +37,7 @@ const TextInput = (props) => {
         fullWidth
         id={id}
         type={type}
+        value={defaultValue}
         onChange={(text) => onChange(text)}
         label={label}
         name={name}

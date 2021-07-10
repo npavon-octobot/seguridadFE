@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 const Container = styled.div`
   margin-bottom: 10px;
-  background-color: red;
+  width: 1000px;
   ${props =>
     props.bgFilled &&
     `

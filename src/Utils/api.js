@@ -1,15 +1,17 @@
 import axios from "axios";
+import jwt from 'jwt-decode'
 
-const API_URL = "http://localhost:8080/seguridad";
+const API_URL = "http://localhost:8080";
 
 export const login = (username, password) => {
-	return axios.post(API_URL + "/login", { username, password })
+	return axios.post(API_URL + "/authenticate", { username, password })
 		.then((response) => {
-			if (response.data.accessToken) {
-				console.log(response.data);
-				localStorage.setItem("user", JSON.stringify(response.data));
+			if (response.data.token) {
+				console.log(JSON.stringify(jwt(response.data.token)));
+				localStorage.setItem("user", JSON.stringify(jwt(response.data.token)));
+				localStorage.setItem("token", JSON.stringify(response.data.token));
 			}
-			return response.data;
+			return JSON.parse(localStorage.getItem('user'));
 		});
 }
 
@@ -17,36 +19,72 @@ export const logout = () => {
 	localStorage.removeItem("user");
 }
 
-export const register = (username, email, password) => {
-	return axios.post(API_URL + "/registro", {
+export const register = (username, password, nombre, apellido, email) => {
+	return axios.post(API_URL + "/register", {
 		username,
-		email,
+		mail: email,
 		password,
+		name: nombre,
+		apellido,
 	});
 }
 
 export const getUsers = () => {
-	return axios.get(API_URL + '/users', { headers: authHeader() });
+	const user = JSON.parse(localStorage.getItem('user'));
+	return axios.get(API_URL + `/users/${user.sub}`, { headers: authHeader() });
 }
 
-export const makeAdmin = () => {
-	return axios.post(API_URL + '/makeAdmin', { headers: authHeader() }); // FIXME: necesita un /id para identificar el usuario
+export const makeAdmin = (username) => {
+	console.log("asdasd");
+	console.log(authHeader());
+	return axios.get(API_URL + `/make_admin/${username}`, { headers: authHeader() }); 
 }
 
-export const updateUser = () => {
-	return axios.post(API_URL + '/user', { headers: authHeader() }); // FIXME: necesita un /id para identificar el usuario
+export const updateUser = (nombre, apellido, email) => {
+	const user = JSON.parse(localStorage.getItem('user'));
+	return axios.post(API_URL + `/user/${user.sub}`, {
+		mail: email,
+		name: nombre,
+		apellido, 
+	},{
+		headers: authHeader() 
+	}); 
+}
+
+export const updateUserPassword = (oldPassword, newPassword) => {
+	const user = JSON.parse(localStorage.getItem('user'));
+	return axios.post(API_URL + `/changePass`, {
+		username: user.sub,
+		oldPassword,
+		newPassword,
+	},
+	{ headers: authHeader() }).then((response) => {
+		if (response.data.token) {
+			localStorage.setItem("token", JSON.stringify(response.data.token));
+		}
+		return response;
+	}); 
 }
 
 export const getUser = () => {
-	return axios.get(API_URL + '/user', { headers: authHeader() }); // FIXME: necesita un /id para identificar el usuario
+	const user = JSON.parse(localStorage.getItem('user'));
+	return axios.get(API_URL + `/user/${user.sub}`, { headers: authHeader() }); 
 }
 
 export const authHeader = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
-
-  if (user && user.accessToken) {
-    return { Authorization: 'Bearer ' + user.accessToken };
+  const token = JSON.parse(localStorage.getItem('token'));
+  if (token) {
+    return { Authorization: token };
   } else {
     return {};
   }
 }
+
+export const beAuthHeader = () => {
+	const token = JSON.parse(localStorage.getItem('token'));
+	if (token) {
+	  return { Authorization: 'Bearer ' + token };
+	} else {
+	  return {};
+	}
+  }

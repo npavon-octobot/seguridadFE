@@ -33,9 +33,13 @@ const SignIn = () => {
 
   const iniciarSesion = () => {
     setErrorMessage("");
-    const user = login(username, password);
-    console.log(user);
-    // validar funco?
+    login(username, password).then(value => {
+      if(value.error){
+        console.log(value.message);
+      }else{
+        history.push("/");
+      }
+    });
   };
 
   return (
